@@ -1,5 +1,7 @@
 //https://raw.githubusercontent.com/clark-stevenson/paper.d.ts/master/paper.d.ts
+//https://www.nuget.org/packages/jquery.TypeScript.DefinitelyTyped/3.1.0
 ///<reference path="paper.d.ts"/>
+///<reference path="jquery.d.ts"/>
 var N = 25;
 var matrix;
 var fBlock = [];
@@ -70,6 +72,19 @@ function delPerim(d, c) {
 function testDir(d) {
     console.log(d);
 }
+function toDimOne(m) {
+    return m.reduce(function (z, i) { return z.concat(i); }, []);
+}
+function toDimTwo(a) {
+    var m = [];
+    for (var i = 0; i < a.length; i += 2) {
+        m.push([a[i], a[i + 1]]);
+    }
+    return m;
+}
+function rounded(a) {
+    return a.map(function (i) { return Math.round(i); });
+}
 testDir("EAST");
 matrix = emptyMatrix(N);
 printMatrix(matrix);
@@ -82,3 +97,9 @@ console.log(t.toString());
 var src = [[1, 1]].reduce(function (z, i) { return z.concat(i); }, []);
 var dst = [];
 console.log(t.transform(src, dst, 1));
+function onKeyUp(event) {
+    console.log(event.key);
+}
+for (var i = 0; i < 25 * 25; i++) {
+    $("#game-div").append($("<div>", { class: "blue-box", text: i }));
+}

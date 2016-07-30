@@ -1,5 +1,8 @@
 //https://raw.githubusercontent.com/clark-stevenson/paper.d.ts/master/paper.d.ts
+//https://www.nuget.org/packages/jquery.TypeScript.DefinitelyTyped/3.1.0
+
 ///<reference path="paper.d.ts"/>
+///<reference path="jquery.d.ts"/>
 
 //pivot should be the first element?
 
@@ -83,6 +86,22 @@ function testDir(d: dir){
 	console.log(d);
 }
 
+function toDimOne(m: Array<coord>){
+	return m.reduce((z, i) => z.concat(i), []);
+}
+
+function toDimTwo(a: Array<number>){
+	let m: Array<coord> = [];
+	for(let i = 0; i < a.length; i+=2){
+		m.push([a[i], a[i+1]]);
+	}
+	return m;
+}
+
+function rounded(a: Array<number>){
+	return a.map(i => Math.round(i));
+}
+
 testDir("EAST");
 matrix = emptyMatrix(N);
 printMatrix(matrix);
@@ -97,3 +116,12 @@ let src: Array<number> = [[1, 1]].reduce( (z, i) => z.concat(i), []);
 let dst: Array<number> = [];
 
 console.log(t.transform(src, dst, 1));
+
+function onKeyUp(event){
+	console.log(event.key)
+}
+
+for(let i = 0; i < 25*25; i++)
+{
+	$("#game-div").append($("<div>", {class: "blue-box", text: i}));
+}

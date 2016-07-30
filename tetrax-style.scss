@@ -1,0 +1,25 @@
+$N: 25;
+$marginsize: 3px;
+$gcontainersize: 1000px;
+
+.box {
+    margin: $marginsize;
+    width: floor(($gcontainersize - $marginsize * $N * 2)/$N);
+    height: floor(($gcontainersize - $marginsize * $N * 2)/$N);  
+    display: inline-block;
+}
+
+.white-box {
+    @extend .box;
+    background-color: white;
+}
+
+.blue-box {
+    @extend .box;
+    background-color: #80e5ff;
+}
+
+.game-container {
+    width: $gcontainersize;
+    height: $gcontainersize;
+}

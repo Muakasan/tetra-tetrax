@@ -1,0 +1,17 @@
+.box, .white-box, .blue-box {
+  margin: 3px;
+  width: 34px;
+  height: 34px;
+  display: inline-block; }
+
+.white-box {
+  background-color: white; }
+
+.blue-box {
+  background-color: #80e5ff; }
+
+.game-container {
+  width: 1000px;
+  height: 1000px; }
+
+/*# sourceMappingURL=tetrax-style.css.map */
