@@ -1,7 +1,6 @@
 //https://raw.githubusercontent.com/clark-stevenson/paper.d.ts/master/paper.d.ts
 //https://www.nuget.org/packages/jquery.TypeScript.DefinitelyTyped/3.1.0
 
-///<reference path="paper.d.ts"/>
 ///<reference path="jquery.d.ts"/>
 
 //pivot should be the first element?
@@ -10,16 +9,107 @@ interface Array<T> {
 	fill(value: T): Array<T>;
 }
 
-type coord = [number, number];
-type dir = "NORTH"|"SOUTH"|"EAST"|"WEST";
-type bmatrix = Array<Array<boolean>>;
-
 const N = 25;
 
-let matrix: bmatrix;
+type Coord = [number, number];
+type dir = "NORTH"|"SOUTH"|"EAST"|"WEST";
+type bmatrix = Array<Array<boolean>>;
+enum Shape {
+    I, O, T, J, L, S, Z
+}
 
-let fBlock: Array<coord> = [];
-let cBlock: Array<coord> = [[0,0]];
+interface Block{
+    pivot: Coord;
+    points: Coord[];
+}
+
+class FBlock implements Block{
+	pivot: Coord;
+	points: Coord[];
+    constructor(){
+		//7 shapes
+    	let s: Shape = Math.floor(Math.random()*7);
+        let baseX: number = Math.floor(N/2);
+        let baseY: number = N-1;
+        switch(s)
+        {
+            case Shape.I: 
+                this.pivot = [baseX+.5, baseY-.5];
+                this.points = [
+                    [baseX-1, baseY],
+                    [baseX, baseY],
+                    [baseX+1, baseY],
+                    [baseX+2, baseY]
+                ];
+                break;
+            case Shape.O: 
+                this.pivot = [baseX-.5, baseY-.5];
+                this.points = [
+                    [baseX-1, baseY],
+                    [baseX, baseY],
+                    [baseX-1, baseY-1],
+                    [baseX, baseY-1]
+                ];
+                break;
+            case Shape.T: 
+                this.pivot = [baseX, baseY-1];
+                this.points = [
+                    [baseX, baseY],
+                    [baseX-1, baseY-1],
+                    [baseX, baseY-1],
+                    [baseX+1, baseY-1]
+                ];
+                break;
+            case Shape.J: 
+                this.pivot = [baseX, baseY-1];
+                this.points = [
+                    [baseX-1, baseY],
+                    [baseX-1, baseY-1],
+                    [baseX, baseY-1],
+                    [baseX+1, baseY-1]
+                ];
+                break;
+            case Shape.L: 
+                this.pivot = [baseX, baseY-1];
+                this.points = [
+                    [baseX+1, baseY],
+                    [baseX-1, baseY-1],
+                    [baseX, baseY-1],
+                    [baseX+1, baseY-1]
+                ];
+                break;
+            case Shape.S: 
+                this.pivot = [baseX, baseY-1];
+                this.points = [
+                    [baseX, baseY],
+                    [baseX+1, baseY],
+                    [baseX-1, baseY-1],
+                    [baseX, baseY-1]
+                ];
+                break;
+            case Shape.Z:
+                this.pivot = [baseX, baseY-1];
+                this.points = [
+                    [baseX-1, baseY],
+                    [baseX, baseY],
+                    [baseX, baseY-1],
+                    [baseX, baseY]
+                ];
+                break;            
+        }
+		
+    }
+	
+}
+
+class CBlock implements Block {
+	pivot: Coord;
+	points: Coord[];
+    constructor(pivot: Coord, points: Coord[]){
+		this.pivot = pivot;
+		this.points = points;
+	}	
+}
 
 function falseArray(n: Number){
 	return Array.apply(null, Array(n)).map(i => false);
@@ -29,7 +119,7 @@ function emptyMatrix(n: Number){
 	return Array.apply(null, Array(n)).map(i => falseArray(n));
 }
 
-function updateMatrix(m: bmatrix, f: Array<coord>, c: Array<coord>){
+function updateMatrix(m: bmatrix, f: Array<Coord>, c: Array<Coord>){
 	for(let r = 0; r < m.length; r++){
 		for(let c = 0; c < m[0].length; c++){
 			m[r][c] = false;
@@ -52,7 +142,7 @@ function printMatrix(m: bmatrix){
 	}
 }
 
-function hasCollided(f: Array<coord>, c: Array<coord>){
+function hasCollided(f: Array<Coord>, c: Array<Coord>){
 	for (let fCoord of f) {
 		for (let cCoord of c){
 			let x1 = fCoord[0];
@@ -61,12 +151,12 @@ function hasCollided(f: Array<coord>, c: Array<coord>){
 			let y2 = cCoord[1];
 			if(Math.abs(x1-x2) == 1 && Math.abs(y2-y1) == 0) return true;
 			if(Math.abs(x1-x2) == 0 && Math.abs(y2-y1) == 1) return true; 
-		}printMatrix(matrix);
+		}
 	}
 	return false;	
 }
 
-function checkPerim(d: number, c: Array<coord>){
+function checkPerim(d: number, c: Array<Coord>){
 	for(let i = -d; i <= d; i++){
 		if(c.indexOf([-d, i])==-1) return false;
 		if(c.indexOf([d, i])==-1) return false;
@@ -76,52 +166,89 @@ function checkPerim(d: number, c: Array<coord>){
 	}
 }
 
-function delPerim(d: number, c: Array<coord>){
+function delPerim(d: number, c: Array<Coord>){
 	for(let i = -d +2; i < d; i++){
 		console.log("Hello");
     }
 }
 
-function testDir(d: dir){
-	console.log(d);
-}
-
-function toDimOne(m: Array<coord>){
-	return m.reduce((z, i) => z.concat(i), []);
-}
-
-function toDimTwo(a: Array<number>){
-	let m: Array<coord> = [];
-	for(let i = 0; i < a.length; i+=2){
-		m.push([a[i], a[i+1]]);
+function renderMatrix(matrix){
+	$("#game-div").html("")
+	for(let i = 0; i < N; i++){
+		for(let j = 0; j < N; j++){
+			if(matrix[i][j]){
+				$("#game-div").append($("<div>", {class: "dark-box", text: i}));
+			}
+			else {
+				$("#game-div").append($("<div>", {class: "light-box", text: i}));
+			}
+		}
 	}
-	return m;
 }
 
-function rounded(a: Array<number>){
-	return a.map(i => Math.round(i));
+function translatePoint(point: Coord, x: number, y: number){
+    return <Coord>[point[0]+x, point[1]+y];
 }
 
-testDir("EAST");
-matrix = emptyMatrix(N);
-printMatrix(matrix);
-updateMatrix(matrix, fBlock, cBlock);
-printMatrix(matrix);
-
-let t = new paper.Matrix(1, 0, 0, 1, 0, 0);
-console.log(t.toString());
-t.rotate(90, new paper.Point(0, 0));
-console.log(t.toString());
-let src: Array<number> = [[1, 1]].reduce( (z, i) => z.concat(i), []);
-let dst: Array<number> = [];
-
-console.log(t.transform(src, dst, 1));
-
-function onKeyUp(event){
-	console.log(event.key)
+function translateArray(ar: Coord[], x: number, y: number){
+    return <Coord[]>ar.map(translatePoint.bind(null, x, y));
 }
 
-for(let i = 0; i < 25*25; i++)
-{
-	$("#game-div").append($("<div>", {class: "blue-box", text: i}));
+function rotateCounterClockwise(ar: Coord[], p: Coord){
+    function rcc(c: Coord){
+        let [x, y] = c;
+        return <Coord>[-x, y];
+    }
+    let arTran = translateArray(ar, -p[0], -p[1]);
+    let arRot: Coord[] = ar.map(rcc);
+    return translateArray(arRot, p[0], p[1]);
+}
+
+function rotateClockwise(ar: Coord[], p: Coord){
+    function rc(c: Coord){
+        let [x, y] = c;
+        return <Coord>[y, -x];
+    }
+    let arTran = translateArray(ar, -p[0], -p[1]);
+    let arRot: Coord[] = ar.map(rc);
+    return translateArray(arRot, p[0], p[1]);
+}
+
+function main(){
+	let matrix: bmatrix;
+
+	let cBlock: Block = new CBlock([Math.floor(N/2),Math.floor(N/2)],
+		[[Math.floor(N/2),Math.floor(N/2)]]);
+
+	let fBlock: Block = new FBlock();
+	
+	window.onkeyup = function(e) {
+		let key: number = e.keyCode ? e.keyCode : e.which;
+		console.log(key);
+		switch(key){
+			case 1 :
+				fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
+				break;
+			case 2 : 
+				fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot); 
+			case 3 :
+				fBlock.points = translateArray(fBlock.points, 1, 0);
+				fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
+			case 4 :
+				fBlock.points = translateArray(fBlock.points, -1, 0);
+				fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
+			case 5 :
+				fBlock.points = translateArray(fBlock.points, 0, -1);
+				fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);   
+		}
+		
+	}
+
+	matrix = emptyMatrix(N);
+
+	renderMatrix(matrix);
+	updateMatrix(matrix, fBlock.points, cBlock.points);
+	renderMatrix(matrix);
+	
+
 }

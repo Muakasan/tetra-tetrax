@@ -1,17 +1,17 @@
-.box, .white-box, .blue-box {
-  margin: 3px;
-  width: 34px;
-  height: 34px;
+.box, .light-box, .dark-box {
+  margin: 1px;
+  width: 30px;
+  height: 30px;
   display: inline-block; }
 
-.white-box {
-  background-color: white; }
+.light-box {
+  background-color: #ccf2ff; }
 
-.blue-box {
-  background-color: #80e5ff; }
+.dark-box {
+  background-color: #33adff; }
 
 .game-container {
-  width: 1000px;
-  height: 1000px; }
+  width: 800px;
+  height: 800px; }
 
 /*# sourceMappingURL=tetrax-style.css.map */

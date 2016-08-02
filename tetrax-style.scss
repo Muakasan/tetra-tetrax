@@ -1,6 +1,6 @@
 $N: 25;
-$marginsize: 3px;
-$gcontainersize: 1000px;
+$marginsize: 1px;
+$gcontainersize: 800px;
 
 .box {
     margin: $marginsize;
@@ -9,14 +9,14 @@ $gcontainersize: 1000px;
     display: inline-block;
 }
 
-.white-box {
+.light-box {
     @extend .box;
-    background-color: white;
+    background-color: #ccf2ff;
 }
 
-.blue-box {
+.dark-box {
     @extend .box;
-    background-color: #80e5ff;
+    background-color: #33adff;
 }
 
 .game-container {

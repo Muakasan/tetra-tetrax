@@ -100,6 +100,18 @@ console.log(t.transform(src, dst, 1));
 function onKeyUp(event) {
     console.log(event.key);
 }
+function renderBoxes(matrix) {
+    $("#game-div").html("");
+    for (var i = 0; i < N; i++) {
+        for (var j = 0; j < N; j++) {
+            if (matrix[i][j]) {
+                $("#game-div").append($("<div>", { class: "dark-box", text: i }));
+            }
+            else {
+                $("#game-div").append($("<div>", { class: "light-box", text: i }));
+            }
+        }
+    }
+}
 for (var i = 0; i < 25 * 25; i++) {
-    $("#game-div").append($("<div>", { class: "blue-box", text: i }));
 }
