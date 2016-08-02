@@ -1,4 +1,3 @@
-//https://raw.githubusercontent.com/clark-stevenson/paper.d.ts/master/paper.d.ts
 //https://www.nuget.org/packages/jquery.TypeScript.DefinitelyTyped/3.1.0
 ///<reference path="jquery.d.ts"/>
 var N = 25;
@@ -176,10 +175,13 @@ function translateArray(ar, x, y) {
 function rotateCounterClockwise(ar, p) {
     function rcc(c) {
         var x = c[0], y = c[1];
-        return [-x, y];
+        return [-y, x];
     }
     var arTran = translateArray(ar, -p[0], -p[1]);
-    var arRot = ar.map(rcc);
+    console.log(arTran);
+    var arRot = arTran.map(rcc);
+    console.log(arRot);
+    console.log(translateArray(arRot, p[0], p[1]));
     return translateArray(arRot, p[0], p[1]);
 }
 function rotateClockwise(ar, p) {
@@ -188,7 +190,7 @@ function rotateClockwise(ar, p) {
         return [y, -x];
     }
     var arTran = translateArray(ar, -p[0], -p[1]);
-    var arRot = ar.map(rc);
+    var arRot = arTran.map(rc);
     return translateArray(arRot, p[0], p[1]);
 }
 function main() {
@@ -211,18 +213,25 @@ function main() {
         var keyR = 82;
         switch (key) {
             case keyQ:
+                //console.log(fBlock.points);
+                //console.log(fBlock.pivot);
+                //console.log(rotateCounterClockwise(fBlock.points, fBlock.pivot));
                 fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
                 break;
             case keyW:
                 fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot);
+                break;
+            case keyE:
+                cBlock.points = rotateCounterClockwise(cBlock.points, cBlock.pivot);
+                break;
+            case keyR:
+                cBlock.points = rotateClockwise(cBlock.points, cBlock.pivot);
                 break;
             case keyRightAr:
                 fBlock.points = translateArray(fBlock.points, 1, 0);
                 fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
                 break;
             case keyLeftAr:
-                console.log(translatePoint(fBlock.pivot, 0, -1));
-                console.log(translateArray(fBlock.points, 0, -1));
                 fBlock.points = translateArray(fBlock.points, -1, 0);
                 fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
                 break;
@@ -231,6 +240,10 @@ function main() {
                 fBlock.points = translateArray(fBlock.points, 0, -1);
                 fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);
                 break;
+        }
+        if (hasCollided(cBlock.points, fBlock.points)) {
+            cBlock.points = cBlock.points.concat(fBlock.points);
+            fBlock = new FBlock();
         }
         updateMatrix(matrix, fBlock.points, cBlock.points);
         renderMatrix(matrix);

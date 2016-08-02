@@ -192,10 +192,13 @@ function translateArray(ar: Coord[], x: number, y: number){
 function rotateCounterClockwise(ar: Coord[], p: Coord){
     function rcc(c: Coord){
         let [x, y] = c;
-        return <Coord>[-x, y];
+        return <Coord>[-y, x];
     }
     let arTran = translateArray(ar, -p[0], -p[1]);
-    let arRot: Coord[] = ar.map(rcc);
+	console.log(arTran);
+    let arRot: Coord[] = arTran.map(rcc);
+	console.log(arRot);
+	console.log(translateArray(arRot,p[0], p[1]));
     return translateArray(arRot, p[0], p[1]);
 }
 
@@ -205,7 +208,7 @@ function rotateClockwise(ar: Coord[], p: Coord){
         return <Coord>[y, -x];
     }
     let arTran = translateArray(ar, -p[0], -p[1]);
-    let arRot: Coord[] = ar.map(rc);
+    let arRot: Coord[] = arTran.map(rc);
     return translateArray(arRot, p[0], p[1]);
 }
 
@@ -235,18 +238,25 @@ function main(){
 
 		switch(key){
 			case keyQ:
+				//console.log(fBlock.points);
+				//console.log(fBlock.pivot);
+				//console.log(rotateCounterClockwise(fBlock.points, fBlock.pivot));
 				fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
 				break;
 			case keyW: 
 				fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot); 
+				break;
+			case keyE:
+				cBlock.points = rotateCounterClockwise(cBlock.points, cBlock.pivot);
+				break;
+			case keyR:
+				cBlock.points = rotateClockwise(cBlock.points, cBlock.pivot);
 				break;
 			case keyRightAr:
 				fBlock.points = translateArray(fBlock.points, 1, 0);
 				fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
 				break;
 			case keyLeftAr:
-				console.log(translatePoint(fBlock.pivot, 0, -1));
-				console.log(translateArray(fBlock.points, 0, -1));
 				fBlock.points = translateArray(fBlock.points, -1, 0);
 				fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
 				break;
@@ -256,6 +266,12 @@ function main(){
 				fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);   
 				break;
 		}
+		
+		if(hasCollided(cBlock.points, fBlock.points)){
+			cBlock.points = cBlock.points.concat(fBlock.points)
+			fBlock = new FBlock();
+		}
+
 		updateMatrix(matrix, fBlock.points, cBlock.points);
 		renderMatrix(matrix);
 	});
