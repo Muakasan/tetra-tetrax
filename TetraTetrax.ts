@@ -1,9 +1,5 @@
-//https://raw.githubusercontent.com/clark-stevenson/paper.d.ts/master/paper.d.ts
 //https://www.nuget.org/packages/jquery.TypeScript.DefinitelyTyped/3.1.0
-
 ///<reference path="jquery.d.ts"/>
-
-//pivot should be the first element?
 
 interface Array<T> {
 	fill(value: T): Array<T>;
@@ -93,7 +89,7 @@ class FBlock implements Block{
                     [baseX-1, baseY],
                     [baseX, baseY],
                     [baseX, baseY-1],
-                    [baseX, baseY]
+                    [baseX+1, baseY-1]
                 ];
                 break;            
         }
@@ -127,8 +123,7 @@ function updateMatrix(m: bmatrix, f: Array<Coord>, c: Array<Coord>){
 	}
 
 	for(let i of f.concat(c)){
-		let x = i[0]+(N-1)/2;
-		let y = i[1]+(N-1)/2;
+		let [x, y] = i;
 		m[x][y] = true;
 	}
 }
@@ -174,13 +169,13 @@ function delPerim(d: number, c: Array<Coord>){
 
 function renderMatrix(matrix){
 	$("#game-div").html("")
-	for(let i = 0; i < N; i++){
+	for(let i = N-1; i >= 0; i--){
 		for(let j = 0; j < N; j++){
-			if(matrix[i][j]){
-				$("#game-div").append($("<div>", {class: "dark-box", text: i}));
+			if(matrix[j][i]){
+				$("#game-div").append($("<div>", {class: "dark-box"}));
 			}
 			else {
-				$("#game-div").append($("<div>", {class: "light-box", text: i}));
+				$("#game-div").append($("<div>", {class: "light-box"}));
 			}
 		}
 	}
@@ -191,7 +186,7 @@ function translatePoint(point: Coord, x: number, y: number){
 }
 
 function translateArray(ar: Coord[], x: number, y: number){
-    return <Coord[]>ar.map(translatePoint.bind(null, x, y));
+    return <Coord[]>ar.map(i => translatePoint(i, x, y));
 }
 
 function rotateCounterClockwise(ar: Coord[], p: Coord){
@@ -217,38 +212,52 @@ function rotateClockwise(ar: Coord[], p: Coord){
 function main(){
 	let matrix: bmatrix;
 
-	let cBlock: Block = new CBlock([Math.floor(N/2),Math.floor(N/2)],
-		[[Math.floor(N/2),Math.floor(N/2)]]);
+	let mid = Math.floor(N/2);
+	let cBlock: Block = new CBlock([mid, mid],
+		[[mid, mid]]);
 
 	let fBlock: Block = new FBlock();
-	
-	window.onkeyup = function(e) {
-		let key: number = e.keyCode ? e.keyCode : e.which;
-		console.log(key);
-		switch(key){
-			case 1 :
-				fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
-				break;
-			case 2 : 
-				fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot); 
-			case 3 :
-				fBlock.points = translateArray(fBlock.points, 1, 0);
-				fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
-			case 4 :
-				fBlock.points = translateArray(fBlock.points, -1, 0);
-				fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
-			case 5 :
-				fBlock.points = translateArray(fBlock.points, 0, -1);
-				fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);   
-		}
-		
-	}
 
 	matrix = emptyMatrix(N);
-
-	renderMatrix(matrix);
 	updateMatrix(matrix, fBlock.points, cBlock.points);
 	renderMatrix(matrix);
 	
+	window.addEventListener('keyup', function(e) {
+		let key: number = e.keyCode ? e.keyCode : e.which;
+		let keyUpAr = 38;
+		let keyRightAr = 39;
+		let keyDownAr = 40;
+		let keyLeftAr = 37;
+		let keyQ = 81;
+		let keyW = 87;
+		let keyE = 69;
+		let keyR = 82;
 
+		switch(key){
+			case keyQ:
+				fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
+				break;
+			case keyW: 
+				fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot); 
+				break;
+			case keyRightAr:
+				fBlock.points = translateArray(fBlock.points, 1, 0);
+				fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
+				break;
+			case keyLeftAr:
+				console.log(translatePoint(fBlock.pivot, 0, -1));
+				console.log(translateArray(fBlock.points, 0, -1));
+				fBlock.points = translateArray(fBlock.points, -1, 0);
+				fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
+				break;
+			case keyDownAr:
+				//e.preventDefault();
+				fBlock.points = translateArray(fBlock.points, 0, -1);
+				fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);   
+				break;
+		}
+		updateMatrix(matrix, fBlock.points, cBlock.points);
+		renderMatrix(matrix);
+	});
 }
+main();

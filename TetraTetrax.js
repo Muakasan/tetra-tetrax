@@ -1,11 +1,98 @@
 //https://raw.githubusercontent.com/clark-stevenson/paper.d.ts/master/paper.d.ts
 //https://www.nuget.org/packages/jquery.TypeScript.DefinitelyTyped/3.1.0
-///<reference path="paper.d.ts"/>
 ///<reference path="jquery.d.ts"/>
 var N = 25;
-var matrix;
-var fBlock = [];
-var cBlock = [[0, 0]];
+var Shape;
+(function (Shape) {
+    Shape[Shape["I"] = 0] = "I";
+    Shape[Shape["O"] = 1] = "O";
+    Shape[Shape["T"] = 2] = "T";
+    Shape[Shape["J"] = 3] = "J";
+    Shape[Shape["L"] = 4] = "L";
+    Shape[Shape["S"] = 5] = "S";
+    Shape[Shape["Z"] = 6] = "Z";
+})(Shape || (Shape = {}));
+var FBlock = (function () {
+    function FBlock() {
+        //7 shapes
+        var s = Math.floor(Math.random() * 7);
+        var baseX = Math.floor(N / 2);
+        var baseY = N - 1;
+        switch (s) {
+            case Shape.I:
+                this.pivot = [baseX + .5, baseY - .5];
+                this.points = [
+                    [baseX - 1, baseY],
+                    [baseX, baseY],
+                    [baseX + 1, baseY],
+                    [baseX + 2, baseY]
+                ];
+                break;
+            case Shape.O:
+                this.pivot = [baseX - .5, baseY - .5];
+                this.points = [
+                    [baseX - 1, baseY],
+                    [baseX, baseY],
+                    [baseX - 1, baseY - 1],
+                    [baseX, baseY - 1]
+                ];
+                break;
+            case Shape.T:
+                this.pivot = [baseX, baseY - 1];
+                this.points = [
+                    [baseX, baseY],
+                    [baseX - 1, baseY - 1],
+                    [baseX, baseY - 1],
+                    [baseX + 1, baseY - 1]
+                ];
+                break;
+            case Shape.J:
+                this.pivot = [baseX, baseY - 1];
+                this.points = [
+                    [baseX - 1, baseY],
+                    [baseX - 1, baseY - 1],
+                    [baseX, baseY - 1],
+                    [baseX + 1, baseY - 1]
+                ];
+                break;
+            case Shape.L:
+                this.pivot = [baseX, baseY - 1];
+                this.points = [
+                    [baseX + 1, baseY],
+                    [baseX - 1, baseY - 1],
+                    [baseX, baseY - 1],
+                    [baseX + 1, baseY - 1]
+                ];
+                break;
+            case Shape.S:
+                this.pivot = [baseX, baseY - 1];
+                this.points = [
+                    [baseX, baseY],
+                    [baseX + 1, baseY],
+                    [baseX - 1, baseY - 1],
+                    [baseX, baseY - 1]
+                ];
+                break;
+            case Shape.Z:
+                this.pivot = [baseX, baseY - 1];
+                this.points = [
+                    [baseX - 1, baseY],
+                    [baseX, baseY],
+                    [baseX, baseY - 1],
+                    [baseX + 1, baseY - 1]
+                ];
+                break;
+        }
+    }
+    return FBlock;
+}());
+var CBlock = (function () {
+    function CBlock(pivot, points) {
+        this.pivot = pivot;
+        this.points = points;
+    }
+    return CBlock;
+}());
 function falseArray(n) {
     return Array.apply(null, Array(n)).map(function (i) { return false; });
 }
@@ -20,8 +107,7 @@ function updateMatrix(m, f, c) {
     }
     for (var _i = 0, _a = f.concat(c); _i < _a.length; _i++) {
         var i = _a[_i];
-        var x = i[0] + (N - 1) / 2;
-        var y = i[1] + (N - 1) / 2;
+        var x = i[0], y = i[1];
         m[x][y] = true;
     }
 }
@@ -48,7 +134,6 @@ function hasCollided(f, c) {
             if (Math.abs(x1 - x2) == 0 && Math.abs(y2 - y1) == 1)
                 return true;
         }
-        printMatrix(matrix);
     }
     return false;
 }
@@ -69,49 +154,86 @@ function delPerim(d, c) {
         console.log("Hello");
     }
 }
-function testDir(d) {
-    console.log(d);
-}
-function toDimOne(m) {
-    return m.reduce(function (z, i) { return z.concat(i); }, []);
-}
-function toDimTwo(a) {
-    var m = [];
-    for (var i = 0; i < a.length; i += 2) {
-        m.push([a[i], a[i + 1]]);
-    }
-    return m;
-}
-function rounded(a) {
-    return a.map(function (i) { return Math.round(i); });
-}
-testDir("EAST");
-matrix = emptyMatrix(N);
-printMatrix(matrix);
-updateMatrix(matrix, fBlock, cBlock);
-printMatrix(matrix);
-var t = new paper.Matrix(1, 0, 0, 1, 0, 0);
-console.log(t.toString());
-t.rotate(90, new paper.Point(0, 0));
-console.log(t.toString());
-var src = [[1, 1]].reduce(function (z, i) { return z.concat(i); }, []);
-var dst = [];
-console.log(t.transform(src, dst, 1));
-function onKeyUp(event) {
-    console.log(event.key);
-}
-function renderBoxes(matrix) {
+function renderMatrix(matrix) {
     $("#game-div").html("");
-    for (var i = 0; i < N; i++) {
+    for (var i = N - 1; i >= 0; i--) {
         for (var j = 0; j < N; j++) {
-            if (matrix[i][j]) {
-                $("#game-div").append($("<div>", { class: "dark-box", text: i }));
+            if (matrix[j][i]) {
+                $("#game-div").append($("<div>", { class: "dark-box" }));
             }
             else {
-                $("#game-div").append($("<div>", { class: "light-box", text: i }));
+                $("#game-div").append($("<div>", { class: "light-box" }));
             }
         }
     }
 }
-for (var i = 0; i < 25 * 25; i++) {
+function translatePoint(point, x, y) {
+    return [point[0] + x, point[1] + y];
 }
+function translateArray(ar, x, y) {
+    return ar.map(function (i) { return translatePoint(i, x, y); });
+}
+function rotateCounterClockwise(ar, p) {
+    function rcc(c) {
+        var x = c[0], y = c[1];
+        return [-x, y];
+    }
+    var arTran = translateArray(ar, -p[0], -p[1]);
+    var arRot = ar.map(rcc);
+    return translateArray(arRot, p[0], p[1]);
+}
+function rotateClockwise(ar, p) {
+    function rc(c) {
+        var x = c[0], y = c[1];
+        return [y, -x];
+    }
+    var arTran = translateArray(ar, -p[0], -p[1]);
+    var arRot = ar.map(rc);
+    return translateArray(arRot, p[0], p[1]);
+}
+function main() {
+    var matrix;
+    var mid = Math.floor(N / 2);
+    var cBlock = new CBlock([mid, mid], [[mid, mid]]);
+    var fBlock = new FBlock();
+    matrix = emptyMatrix(N);
+    updateMatrix(matrix, fBlock.points, cBlock.points);
+    renderMatrix(matrix);
+    window.addEventListener('keyup', function (e) {
+        var key = e.keyCode ? e.keyCode : e.which;
+        var keyUpAr = 38;
+        var keyRightAr = 39;
+        var keyDownAr = 40;
+        var keyLeftAr = 37;
+        var keyQ = 81;
+        var keyW = 87;
+        var keyE = 69;
+        var keyR = 82;
+        switch (key) {
+            case keyQ:
+                fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
+                break;
+            case keyW:
+                fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot);
+                break;
+            case keyRightAr:
+                fBlock.points = translateArray(fBlock.points, 1, 0);
+                fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
+                break;
+            case keyLeftAr:
+                console.log(translatePoint(fBlock.pivot, 0, -1));
+                console.log(translateArray(fBlock.points, 0, -1));
+                fBlock.points = translateArray(fBlock.points, -1, 0);
+                fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
+                break;
+            case keyDownAr:
+                //e.preventDefault();
+                fBlock.points = translateArray(fBlock.points, 0, -1);
+                fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);
+                break;
+        }
+        updateMatrix(matrix, fBlock.points, cBlock.points);
+        renderMatrix(matrix);
+    });
+}
+main();
