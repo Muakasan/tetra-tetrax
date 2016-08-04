@@ -2,7 +2,6 @@
 ///<reference path="jquery.d.ts"/>
 
 interface Array<T> {
-	fill(value: T): Array<T>;
 	includes(value: T): boolean;
 }
 
@@ -231,30 +230,20 @@ function shellFilled(d: number, c: Coord[]){
 	return true;
 }
 
-function hasCollided(f: Array<Coord>, c: Array<Coord>){
-	for (let fCoord of f) {
-		for (let cCoord of c){
-			let [x1, y1] = fCoord;
-			let [x2, y2] = cCoord;
-			if(Math.abs(x1-x2) == 1 && Math.abs(y2-y1) == 0) return true;
-			if(Math.abs(x1-x2) == 0 && Math.abs(y2-y1) == 1) return true; 
+function hasCollided(upperBlock: Array<Coord>, lowerBlock: Array<Coord>){
+	for (let uCoord of upperBlock) {
+		for (let lCoord of lowerBlock){
+			let [ux, uy] = uCoord;
+			let [lx, ly] = lCoord;
+			if( (ux-lx) == 0 && uy-ly == 1) return true; 
 		}
 	}
 	return false;	
 }
 
 function gameOver(f: Coord[], c: Coord[]){
-	return hasCollided(f, getFloor()) || hasCollided(c, getCeiling());
+	return hasCollided(f, getFloor()) || hasCollided(getCeiling(), c);
 }
-
-
-
-//TODO
-
-
-
-
-
 
 function main(){
 	let matrix: BMatrix;
@@ -268,6 +257,8 @@ function main(){
 	updateMatrix(matrix, fBlock.points, cBlock.points);
 	renderMatrix(matrix);
 	
+	let blocked = false;
+
 	window.addEventListener('keyup', function(e) {
 		let key: number = e.keyCode ? e.keyCode : e.which;
 		let keyUpAr = 38;
@@ -278,45 +269,49 @@ function main(){
 		let keyW = 87;
 		let keyE = 69;
 		let keyR = 82;
+		
+		if(!blocked)
+		{
+			switch(key){
+				case keyQ:
+					fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
+					break;
+				case keyW: 
+					fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot); 
+					break;
+				case keyE:
+					cBlock.points = rotateCounterClockwise(cBlock.points, cBlock.pivot);
+					break;
+				case keyR:
+					cBlock.points = rotateClockwise(cBlock.points, cBlock.pivot);
+					break;
+				case keyRightAr:
+					fBlock.points = translateArray(fBlock.points, 1, 0);
+					fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
+					break;
+				case keyLeftAr:
+					fBlock.points = translateArray(fBlock.points, -1, 0);
+					fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
+					break;
+				case keyDownAr:
+					//e.preventDefault();
+					fBlock.points = translateArray(fBlock.points, 0, -1);
+					fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);   
+					break;
+			}
+			if(hasCollided(fBlock.points, cBlock.points)){
+				cBlock.points = cBlock.points.concat(fBlock.points)
+				fBlock = new FBlock();
+			}
 
-		switch(key){
-			case keyQ:
-				fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
-				break;
-			case keyW: 
-				fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot); 
-				break;
-			case keyE:
-				cBlock.points = rotateCounterClockwise(cBlock.points, cBlock.pivot);
-				break;
-			case keyR:
-				cBlock.points = rotateClockwise(cBlock.points, cBlock.pivot);
-				break;
-			case keyRightAr:
-				fBlock.points = translateArray(fBlock.points, 1, 0);
-				fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
-				break;
-			case keyLeftAr:
-				fBlock.points = translateArray(fBlock.points, -1, 0);
-				fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
-				break;
-			case keyDownAr:
-				//e.preventDefault();
-				fBlock.points = translateArray(fBlock.points, 0, -1);
-				fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);   
-				break;
+			updateMatrix(matrix, fBlock.points, cBlock.points);
+			renderMatrix(matrix);
 		}
-		if(hasCollided(fBlock.points, cBlock.points)){
-			cBlock.points = cBlock.points.concat(fBlock.points)
-			fBlock = new FBlock();
-		}
-
-		updateMatrix(matrix, fBlock.points, cBlock.points);
-		renderMatrix(matrix);
 	});
 
 	function setTimer(){ //Side-Effects
 		let timer = setInterval(function(){
+			blocked = true;
 			if(hasCollided(fBlock.points, cBlock.points)){ //has collided with floor or center
 				clearInterval(timer);
 				//check for deletions
@@ -335,7 +330,8 @@ function main(){
 			}
 			updateMatrix(matrix, fBlock.points, cBlock.points);
 			renderMatrix(matrix);
-		}, 1 * 1000);
+			blocked = false;
+		}, .5 * 1000);
 	}
 
 	setTimer();

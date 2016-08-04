@@ -202,25 +202,22 @@ function shellFilled(d, c) {
     }
     return true;
 }
-function hasCollided(f, c) {
-    for (var _i = 0, f_1 = f; _i < f_1.length; _i++) {
-        var fCoord = f_1[_i];
-        for (var _a = 0, c_2 = c; _a < c_2.length; _a++) {
-            var cCoord = c_2[_a];
-            var x1 = fCoord[0], y1 = fCoord[1];
-            var x2 = cCoord[0], y2 = cCoord[1];
-            if (Math.abs(x1 - x2) == 1 && Math.abs(y2 - y1) == 0)
-                return true;
-            if (Math.abs(x1 - x2) == 0 && Math.abs(y2 - y1) == 1)
+function hasCollided(upperBlock, lowerBlock) {
+    for (var _i = 0, upperBlock_1 = upperBlock; _i < upperBlock_1.length; _i++) {
+        var uCoord = upperBlock_1[_i];
+        for (var _a = 0, lowerBlock_1 = lowerBlock; _a < lowerBlock_1.length; _a++) {
+            var lCoord = lowerBlock_1[_a];
+            var ux = uCoord[0], uy = uCoord[1];
+            var lx = lCoord[0], ly = lCoord[1];
+            if ((ux - lx) == 0 && uy - ly == 1)
                 return true;
         }
     }
     return false;
 }
 function gameOver(f, c) {
-    return hasCollided(f, getFloor()) || hasCollided(c, getCeiling());
+    return hasCollided(f, getFloor()) || hasCollided(getCeiling(), c);
 }
-//TODO
 function main() {
     var matrix;
     var cBlock = new CBlock([MID, MID], [[MID, MID]]);
@@ -228,6 +225,7 @@ function main() {
     matrix = emptyMatrix(N);
     updateMatrix(matrix, fBlock.points, cBlock.points);
     renderMatrix(matrix);
+    var blocked = false;
     window.addEventListener('keyup', function (e) {
         var key = e.keyCode ? e.keyCode : e.which;
         var keyUpAr = 38;
@@ -238,42 +236,45 @@ function main() {
         var keyW = 87;
         var keyE = 69;
         var keyR = 82;
-        switch (key) {
-            case keyQ:
-                fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
-                break;
-            case keyW:
-                fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot);
-                break;
-            case keyE:
-                cBlock.points = rotateCounterClockwise(cBlock.points, cBlock.pivot);
-                break;
-            case keyR:
-                cBlock.points = rotateClockwise(cBlock.points, cBlock.pivot);
-                break;
-            case keyRightAr:
-                fBlock.points = translateArray(fBlock.points, 1, 0);
-                fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
-                break;
-            case keyLeftAr:
-                fBlock.points = translateArray(fBlock.points, -1, 0);
-                fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
-                break;
-            case keyDownAr:
-                //e.preventDefault();
-                fBlock.points = translateArray(fBlock.points, 0, -1);
-                fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);
-                break;
+        if (!blocked) {
+            switch (key) {
+                case keyQ:
+                    fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
+                    break;
+                case keyW:
+                    fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot);
+                    break;
+                case keyE:
+                    cBlock.points = rotateCounterClockwise(cBlock.points, cBlock.pivot);
+                    break;
+                case keyR:
+                    cBlock.points = rotateClockwise(cBlock.points, cBlock.pivot);
+                    break;
+                case keyRightAr:
+                    fBlock.points = translateArray(fBlock.points, 1, 0);
+                    fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
+                    break;
+                case keyLeftAr:
+                    fBlock.points = translateArray(fBlock.points, -1, 0);
+                    fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
+                    break;
+                case keyDownAr:
+                    //e.preventDefault();
+                    fBlock.points = translateArray(fBlock.points, 0, -1);
+                    fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);
+                    break;
+            }
+            if (hasCollided(fBlock.points, cBlock.points)) {
+                cBlock.points = cBlock.points.concat(fBlock.points);
+                fBlock = new FBlock();
+            }
+            updateMatrix(matrix, fBlock.points, cBlock.points);
+            renderMatrix(matrix);
         }
-        if (hasCollided(fBlock.points, cBlock.points)) {
-            cBlock.points = cBlock.points.concat(fBlock.points);
-            fBlock = new FBlock();
-        }
-        updateMatrix(matrix, fBlock.points, cBlock.points);
-        renderMatrix(matrix);
     });
     function setTimer() {
         var timer = setInterval(function () {
+            blocked = true;
             if (hasCollided(fBlock.points, cBlock.points)) {
                 clearInterval(timer);
                 //check for deletions
@@ -291,7 +292,8 @@ function main() {
             }
             updateMatrix(matrix, fBlock.points, cBlock.points);
             renderMatrix(matrix);
-        }, 1 * 1000);
+            blocked = false;
+        }, .5 * 1000);
     }
     setTimer();
 }
