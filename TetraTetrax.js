@@ -1,6 +1,7 @@
 //https://www.nuget.org/packages/jquery.TypeScript.DefinitelyTyped/3.1.0
 ///<reference path="jquery.d.ts"/>
 var N = 25;
+var MID = Math.floor(25 / 2);
 var Shape;
 (function (Shape) {
     Shape[Shape["I"] = 0] = "I";
@@ -136,23 +137,6 @@ function hasCollided(f, c) {
     }
     return false;
 }
-function checkPerim(d, c) {
-    for (var i = -d; i <= d; i++) {
-        if (c.indexOf([-d, i]) == -1)
-            return false;
-        if (c.indexOf([d, i]) == -1)
-            return false;
-        if (c.indexOf([i, -d]) == -1)
-            return false;
-        if (c.indexOf([i, d]) == -1)
-            return false;
-    }
-}
-function delPerim(d, c) {
-    for (var i = -d + 2; i < d; i++) {
-        console.log("Hello");
-    }
-}
 function renderMatrix(matrix) {
     $("#game-div").html("");
     for (var i = N - 1; i >= 0; i--) {
@@ -178,10 +162,7 @@ function rotateCounterClockwise(ar, p) {
         return [-y, x];
     }
     var arTran = translateArray(ar, -p[0], -p[1]);
-    console.log(arTran);
     var arRot = arTran.map(rcc);
-    console.log(arRot);
-    console.log(translateArray(arRot, p[0], p[1]));
     return translateArray(arRot, p[0], p[1]);
 }
 function rotateClockwise(ar, p) {
@@ -193,14 +174,64 @@ function rotateClockwise(ar, p) {
     var arRot = arTran.map(rc);
     return translateArray(arRot, p[0], p[1]);
 }
+function getFloor() {
+    var floor = [];
+    for (var i = 0; i < N; i++) {
+        floor.push([i, -1]);
+    }
+    return floor;
+}
+function gameOver(f) {
+    return hasCollided(f, getFloor());
+}
+function setTimer() {
+    var timer = setInterval(function () {
+        if (hasCollided()) {
+            clearInterval(timer);
+            //check for deletions
+            if (gameOver) {
+            }
+            else {
+                //reset block
+                setTimer();
+            }
+        }
+        //fall block
+    }, 1 * 1000);
+}
+var m2 = emptyMatrix(N);
+function shiftPoint(x, y, xA, yA, block) {
+    m2[x][y] = true;
+    //remove x, y from Block
+    //add [x+xA, y+yA] to block 
+}
+function shiftShell(d) {
+    var block;
+    for (var i = -d + 2; i <= d - 1; i++) {
+        shiftPoint(MID + i, MID + 4, 0, -1, block);
+        shiftPoint(MID + 4, MID - i, -1, 0, block);
+        shiftPoint(MID - 4, MID + i, 1, 0, block);
+        shiftPoint(MID - i, MID - 4, 0, 1, block);
+    }
+}
+function shellFilled(d) {
+    var block;
+    for (var i = -d; i <= d - 1; i++) {
+        shiftPoint(MID + i, MID + 4, 0, -1, block);
+        shiftPoint(MID + 4, MID - i, -1, 0, block);
+        shiftPoint(MID - 4, MID + i, 1, 0, block);
+        shiftPoint(MID - i, MID - 4, 0, 1, block);
+    }
+}
+shellFilled(4);
+renderMatrix(m2);
 function main() {
     var matrix;
-    var mid = Math.floor(N / 2);
-    var cBlock = new CBlock([mid, mid], [[mid, mid]]);
+    var cBlock = new CBlock([MID, MID], [[MID, MID]]);
     var fBlock = new FBlock();
     matrix = emptyMatrix(N);
     updateMatrix(matrix, fBlock.points, cBlock.points);
-    renderMatrix(matrix);
+    //renderMatrix(matrix);
     window.addEventListener('keyup', function (e) {
         var key = e.keyCode ? e.keyCode : e.which;
         var keyUpAr = 38;
