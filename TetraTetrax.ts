@@ -230,23 +230,15 @@ function shellFilled(d: number, c: Coord[]){
 	return true;
 }
 
-function isTouchingWall(b: Coord[], d: Dir){
-	let xs = b.map(i => i[0]);
-	let ys = b.map(i => i[1]);
-	switch(d){
-		case "NORTH":
-			return 	ys.includes(N-1);
-		case "EAST":
-			return xs.includes(N-1);
-		case "WEST":
-			return xs.includes(0);
-		case "SOUTH":
-			return ys.includes(0);
+function isIntersecting(a: Coord[], b: Coord[]){
+	for(let aCoord of a){
+		for(let bCoord of b){
+			if(aCoord == bCoord){
+				return true;
+			}
+		}
 	}
-}
-
-function isIntesecting(){
-
+	return false;
 }
 
 function hasCollided(upperBlock: Array<Coord>, lowerBlock: Array<Coord>){
