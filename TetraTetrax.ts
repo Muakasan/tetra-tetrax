@@ -3,6 +3,7 @@
 
 interface Array<T> {
 	fill(value: T): Array<T>;
+	includes(value: T): boolean;
 }
 
 const N = 25;
@@ -204,7 +205,7 @@ function hasCollided(f: Array<Coord>, c: Array<Coord>){
 	}
 	return false;	
 }
-
+//TODO?
 function gameOver(f: Coord[]){
 	return hasCollided(f, getFloor());
 }
@@ -247,14 +248,16 @@ function shiftShell(d: number, c: Coord[]){ //Side-Effects, Leaves old shell the
     }
 }
 
-function shellFilled(d: number){
-	let block: Coord[];
+function shellFilled(d: number, c: Coord[]){
     for(let i = -d; i <= d-1; i++){
-		shiftPoint(MID+i, MID+4, 0, -1, block);
-        shiftPoint(MID+4, MID-i, -1, 0, block);
-        shiftPoint(MID-4, MID+i, 1, 0, block);
-        shiftPoint(MID-i, MID-4, 0, 1, block);    
+		if(!(c.includes([MID+i, MID+4]) && 
+        	c.includes([MID+4, MID-i]) &&
+        	c.includes([MID-4, MID+i]) &&
+        	c.includes([MID-i, MID-4]))){
+				return false;
+		}    
     }
+	return true;
 }
 
 function addKeyListeners(f: FBlock, c: CBlock, m: BMatrix){
