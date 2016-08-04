@@ -151,7 +151,9 @@ function hasCollided(f: Array<Coord>, c: Array<Coord>){
 	return false;	
 }
 
-function checkPerim(d: number, c: Array<Coord>){
+function perimFilled(d: number, c: Array<Coord>){
+	let mid = Math.floor(N/2);
+	
 	for(let i = -d; i <= d; i++){
 		if(c.indexOf([-d, i])==-1) return false;
 		if(c.indexOf([d, i])==-1) return false;
@@ -159,6 +161,7 @@ function checkPerim(d: number, c: Array<Coord>){
 		if(c.indexOf([i, d])==-1) return false;
 		//if(cBlock.indexOf([d, i, -1])==-1) return false; //shouldnt this throw a type error?
 	}
+	return true;
 }
 
 function delPerim(d: number, c: Array<Coord>){
@@ -195,10 +198,7 @@ function rotateCounterClockwise(ar: Coord[], p: Coord){
         return <Coord>[-y, x];
     }
     let arTran = translateArray(ar, -p[0], -p[1]);
-	console.log(arTran);
-    let arRot: Coord[] = arTran.map(rcc);
-	console.log(arRot);
-	console.log(translateArray(arRot,p[0], p[1]));
+	let arRot: Coord[] = arTran.map(rcc);
     return translateArray(arRot, p[0], p[1]);
 }
 
@@ -210,6 +210,56 @@ function rotateClockwise(ar: Coord[], p: Coord){
     let arTran = translateArray(ar, -p[0], -p[1]);
     let arRot: Coord[] = arTran.map(rc);
     return translateArray(arRot, p[0], p[1]);
+}
+
+function getFloor(){
+	let floor: Coord[] = [];
+	for(let i = 0; i < N; i++){
+		floor.push([i, -1]);
+	}
+	return floor;
+}
+
+function gameOver(f: Coord[]){
+	return hasCollided(f, getFloor());
+}
+
+function setTimer(){
+    let timer = setInterval(function(){
+        if(hasCollided()){ //with floor or wall
+            clearInterval(timer);
+            //check for deletions
+            if(gameOver){
+
+            }
+            else {
+                //reset block
+                setTimer();
+            }
+        }
+        //fall block
+    }, 1 * 1000);
+}
+
+function shiftPoint(x: number, y: number, xA: number, yA: number, block: Coord[]){
+    //remove x, y from Block
+    //add [x+xA, y+yA] to block 
+}
+function shiftShell(d: number){
+    let block: Coord[];
+    let mid = 5;
+    for(let i = -d +2; i <= d-1; i++){
+        shiftPoint(mid+i, mid+4, 0, -1, block);
+        shiftPoint(mid+4, mid-i, -1, 0, block);
+        shiftPoint(mid-4, mid+i, 1, 0, block);
+        shiftPoint(mid-i, mid+4, 0, 1, block);
+    }
+}
+
+function shellFilled(d: number){
+    for(let i = -d; i <= d-1; i++){
+        
+    }
 }
 
 function main(){
