@@ -194,42 +194,13 @@ function getFloor(){
 	return floor;
 }
 
-function hasCollided(f: Array<Coord>, c: Array<Coord>){
-	for (let fCoord of f) {
-		for (let cCoord of c){
-			let [x1, y1] = fCoord;
-			let [x2, y2] = cCoord;
-			if(Math.abs(x1-x2) == 1 && Math.abs(y2-y1) == 0) return true;
-			if(Math.abs(x1-x2) == 0 && Math.abs(y2-y1) == 1) return true; 
-		}
+function getCeiling(){
+	let ceil: Coord[] = [];
+	for(let i = 0; i < N; i++){
+		ceil.push([i, 25]);
 	}
-	return false;	
+	return ceil;	
 }
-//TODO?
-function gameOver(f: Coord[]){
-	return hasCollided(f, getFloor());
-}
-
-//TODO
-function setTimer(){
-    let timer = setInterval(function(){
-        if(hasCollided()){ //with floor or wall
-            clearInterval(timer);
-            //check for deletions
-            if(gameOver){
-
-            }
-            else {
-                //reset block
-                setTimer();
-            }
-        }
-        //fall block
-    }, 1 * 1000);
-}
-
-
-let m2 = emptyMatrix(N);
 
 function shiftPoint(x: number, y: number, xA: number, yA: number, block: Coord[]){ //Side-Effects, Leaves old point there, should shift into empty point
 	let index: number = block.indexOf([x, y]);
@@ -250,17 +221,53 @@ function shiftShell(d: number, c: Coord[]){ //Side-Effects, Leaves old shell the
 
 function shellFilled(d: number, c: Coord[]){
     for(let i = -d; i <= d-1; i++){
-		if(!(c.includes([MID+i, MID+4]) && 
-        	c.includes([MID+4, MID-i]) &&
-        	c.includes([MID-4, MID+i]) &&
-        	c.includes([MID-i, MID-4]))){
+		if(!(c.includes(<Coord>[MID+i, MID+4]) && 
+        	c.includes(<Coord>[MID+4, MID-i]) &&
+        	c.includes(<Coord>[MID-4, MID+i]) &&
+        	c.includes(<Coord>[MID-i, MID-4]))){
 				return false;
 		}    
     }
 	return true;
 }
 
-function addKeyListeners(f: FBlock, c: CBlock, m: BMatrix){
+function hasCollided(f: Array<Coord>, c: Array<Coord>){
+	for (let fCoord of f) {
+		for (let cCoord of c){
+			let [x1, y1] = fCoord;
+			let [x2, y2] = cCoord;
+			if(Math.abs(x1-x2) == 1 && Math.abs(y2-y1) == 0) return true;
+			if(Math.abs(x1-x2) == 0 && Math.abs(y2-y1) == 1) return true; 
+		}
+	}
+	return false;	
+}
+
+function gameOver(f: Coord[], c: Coord[]){
+	return hasCollided(f, getFloor()) || hasCollided(c, getCeiling());
+}
+
+
+
+//TODO
+
+
+
+
+
+
+function main(){
+	let matrix: BMatrix;
+
+	let cBlock: Block = new CBlock([MID, MID],
+		[[MID, MID]]);
+
+	let fBlock: Block = new FBlock();
+
+	matrix = emptyMatrix(N);
+	updateMatrix(matrix, fBlock.points, cBlock.points);
+	renderMatrix(matrix);
+	
 	window.addEventListener('keyup', function(e) {
 		let key: number = e.keyCode ? e.keyCode : e.which;
 		let keyUpAr = 38;
@@ -274,54 +281,64 @@ function addKeyListeners(f: FBlock, c: CBlock, m: BMatrix){
 
 		switch(key){
 			case keyQ:
-				f.points = rotateCounterClockwise(f.points, f.pivot);
+				fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
 				break;
 			case keyW: 
-				f.points = rotateClockwise(f.points, f.pivot); 
+				fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot); 
 				break;
 			case keyE:
-				c.points = rotateCounterClockwise(c.points, c.pivot);
+				cBlock.points = rotateCounterClockwise(cBlock.points, cBlock.pivot);
 				break;
 			case keyR:
-				c.points = rotateClockwise(c.points, c.pivot);
+				cBlock.points = rotateClockwise(cBlock.points, cBlock.pivot);
 				break;
 			case keyRightAr:
-				f.points = translateArray(f.points, 1, 0);
-				f.pivot = translatePoint(f.pivot, 1, 0);
+				fBlock.points = translateArray(fBlock.points, 1, 0);
+				fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
 				break;
 			case keyLeftAr:
-				f.points = translateArray(f.points, -1, 0);
-				f.pivot = translatePoint(f.pivot, -1, 0);
+				fBlock.points = translateArray(fBlock.points, -1, 0);
+				fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
 				break;
 			case keyDownAr:
 				//e.preventDefault();
-				f.points = translateArray(f.points, 0, -1);
-				f.pivot = translatePoint(f.pivot, 0, -1);   
+				fBlock.points = translateArray(fBlock.points, 0, -1);
+				fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);   
 				break;
 		}
-		
-		if(hasCollided(c.points, f.points)){
-			c.points = c.points.concat(f.points)
-			f = new FBlock();
+		if(hasCollided(fBlock.points, cBlock.points)){
+			cBlock.points = cBlock.points.concat(fBlock.points)
+			fBlock = new FBlock();
 		}
 
-		updateMatrix(m, f.points, c.points);
-		renderMatrix(m);
+		updateMatrix(matrix, fBlock.points, cBlock.points);
+		renderMatrix(matrix);
 	});
-}
 
-function main(){
-	let matrix: BMatrix;
+	function setTimer(){ //Side-Effects
+		let timer = setInterval(function(){
+			if(hasCollided(fBlock.points, cBlock.points)){ //has collided with floor or center
+				clearInterval(timer);
+				//check for deletions
+				if(gameOver(fBlock.points, cBlock.points)){
+					
+				}
+				else {
+					cBlock.points = cBlock.points.concat(fBlock.points)
+					fBlock = new FBlock();
+					setTimer();
+				}
+			}
+			else {
+				fBlock.points = translateArray(fBlock.points, 0, -1);
+				fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);   
+			}
+			updateMatrix(matrix, fBlock.points, cBlock.points);
+			renderMatrix(matrix);
+		}, 1 * 1000);
+	}
 
-	let cBlock: Block = new CBlock([MID, MID],
-		[[MID, MID]]);
-
-	let fBlock: Block = new FBlock();
-
-	matrix = emptyMatrix(N);
-	updateMatrix(matrix, fBlock.points, cBlock.points);
-	renderMatrix(matrix);
-	addKeyListeners(fBlock, cBlock, matrix);
+	setTimer();
 }
 
 main();

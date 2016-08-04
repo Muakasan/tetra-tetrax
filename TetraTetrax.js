@@ -93,24 +93,14 @@ var CBlock = (function () {
     }
     return CBlock;
 }());
+//Empty Array Initializations
 function falseArray(n) {
     return Array.apply(null, Array(n)).map(function (i) { return false; });
 }
 function emptyMatrix(n) {
     return Array.apply(null, Array(n)).map(function (i) { return falseArray(n); });
 }
-function updateMatrix(m, f, c) {
-    for (var r = 0; r < m.length; r++) {
-        for (var c_1 = 0; c_1 < m[0].length; c_1++) {
-            m[r][c_1] = false;
-        }
-    }
-    for (var _i = 0, _a = f.concat(c); _i < _a.length; _i++) {
-        var i = _a[_i];
-        var x = i[0], y = i[1];
-        m[x][y] = true;
-    }
-}
+//Display Matrices
 function printMatrix(m) {
     console.log();
     for (var _i = 0, m_1 = m; _i < m_1.length; _i++) {
@@ -119,23 +109,6 @@ function printMatrix(m) {
             .replace(/false/g, "_")
             .replace(/true/g, "0"));
     }
-}
-function hasCollided(f, c) {
-    for (var _i = 0, f_1 = f; _i < f_1.length; _i++) {
-        var fCoord = f_1[_i];
-        for (var _a = 0, c_2 = c; _a < c_2.length; _a++) {
-            var cCoord = c_2[_a];
-            var x1 = fCoord[0];
-            var y1 = fCoord[1];
-            var x2 = cCoord[0];
-            var y2 = cCoord[1];
-            if (Math.abs(x1 - x2) == 1 && Math.abs(y2 - y1) == 0)
-                return true;
-            if (Math.abs(x1 - x2) == 0 && Math.abs(y2 - y1) == 1)
-                return true;
-        }
-    }
-    return false;
 }
 function renderMatrix(matrix) {
     $("#game-div").html("");
@@ -150,6 +123,20 @@ function renderMatrix(matrix) {
         }
     }
 }
+//To update display matrix
+function updateMatrix(m, f, c) {
+    for (var r = 0; r < m.length; r++) {
+        for (var c_1 = 0; c_1 < m[0].length; c_1++) {
+            m[r][c_1] = false;
+        }
+    }
+    for (var _i = 0, _a = f.concat(c); _i < _a.length; _i++) {
+        var i = _a[_i];
+        var x = i[0], y = i[1];
+        m[x][y] = true;
+    }
+}
+//Matrix transformations
 function translatePoint(point, x, y) {
     return [point[0] + x, point[1] + y];
 }
@@ -174,6 +161,7 @@ function rotateClockwise(ar, p) {
     var arRot = arTran.map(rc);
     return translateArray(arRot, p[0], p[1]);
 }
+//Iteration functions
 function getFloor() {
     var floor = [];
     for (var i = 0; i < N; i++) {
@@ -181,57 +169,65 @@ function getFloor() {
     }
     return floor;
 }
-function gameOver(f) {
-    return hasCollided(f, getFloor());
+function getCeiling() {
+    var ceil = [];
+    for (var i = 0; i < N; i++) {
+        ceil.push([i, 25]);
+    }
+    return ceil;
 }
-function setTimer() {
-    var timer = setInterval(function () {
-        if (hasCollided()) {
-            clearInterval(timer);
-            //check for deletions
-            if (gameOver) {
-            }
-            else {
-                //reset block
-                setTimer();
-            }
-        }
-        //fall block
-    }, 1 * 1000);
-}
-var m2 = emptyMatrix(N);
 function shiftPoint(x, y, xA, yA, block) {
-    m2[x][y] = true;
-    //remove x, y from Block
-    //add [x+xA, y+yA] to block 
+    var index = block.indexOf([x, y]);
+    if (index > -1) {
+        block.splice(index, 1);
+        block.push([x + xA, y + yA]);
+    }
 }
-function shiftShell(d) {
-    var block;
+function shiftShell(d, c) {
     for (var i = -d + 2; i <= d - 1; i++) {
-        shiftPoint(MID + i, MID + 4, 0, -1, block);
-        shiftPoint(MID + 4, MID - i, -1, 0, block);
-        shiftPoint(MID - 4, MID + i, 1, 0, block);
-        shiftPoint(MID - i, MID - 4, 0, 1, block);
+        shiftPoint(MID + i, MID + 4, 0, -1, c);
+        shiftPoint(MID + 4, MID - i, -1, 0, c);
+        shiftPoint(MID - 4, MID + i, 1, 0, c);
+        shiftPoint(MID - i, MID - 4, 0, 1, c);
     }
 }
-function shellFilled(d) {
-    var block;
+function shellFilled(d, c) {
     for (var i = -d; i <= d - 1; i++) {
-        shiftPoint(MID + i, MID + 4, 0, -1, block);
-        shiftPoint(MID + 4, MID - i, -1, 0, block);
-        shiftPoint(MID - 4, MID + i, 1, 0, block);
-        shiftPoint(MID - i, MID - 4, 0, 1, block);
+        if (!(c.includes([MID + i, MID + 4]) &&
+            c.includes([MID + 4, MID - i]) &&
+            c.includes([MID - 4, MID + i]) &&
+            c.includes([MID - i, MID - 4]))) {
+            return false;
+        }
     }
+    return true;
 }
-shellFilled(4);
-renderMatrix(m2);
+function hasCollided(f, c) {
+    for (var _i = 0, f_1 = f; _i < f_1.length; _i++) {
+        var fCoord = f_1[_i];
+        for (var _a = 0, c_2 = c; _a < c_2.length; _a++) {
+            var cCoord = c_2[_a];
+            var x1 = fCoord[0], y1 = fCoord[1];
+            var x2 = cCoord[0], y2 = cCoord[1];
+            if (Math.abs(x1 - x2) == 1 && Math.abs(y2 - y1) == 0)
+                return true;
+            if (Math.abs(x1 - x2) == 0 && Math.abs(y2 - y1) == 1)
+                return true;
+        }
+    }
+    return false;
+}
+function gameOver(f, c) {
+    return hasCollided(f, getFloor()) || hasCollided(c, getCeiling());
+}
+//TODO
 function main() {
     var matrix;
     var cBlock = new CBlock([MID, MID], [[MID, MID]]);
     var fBlock = new FBlock();
     matrix = emptyMatrix(N);
     updateMatrix(matrix, fBlock.points, cBlock.points);
-    //renderMatrix(matrix);
+    renderMatrix(matrix);
     window.addEventListener('keyup', function (e) {
         var key = e.keyCode ? e.keyCode : e.which;
         var keyUpAr = 38;
@@ -244,9 +240,6 @@ function main() {
         var keyR = 82;
         switch (key) {
             case keyQ:
-                //console.log(fBlock.points);
-                //console.log(fBlock.pivot);
-                //console.log(rotateCounterClockwise(fBlock.points, fBlock.pivot));
                 fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
                 break;
             case keyW:
@@ -272,12 +265,34 @@ function main() {
                 fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);
                 break;
         }
-        if (hasCollided(cBlock.points, fBlock.points)) {
+        if (hasCollided(fBlock.points, cBlock.points)) {
             cBlock.points = cBlock.points.concat(fBlock.points);
             fBlock = new FBlock();
         }
         updateMatrix(matrix, fBlock.points, cBlock.points);
         renderMatrix(matrix);
     });
+    function setTimer() {
+        var timer = setInterval(function () {
+            if (hasCollided(fBlock.points, cBlock.points)) {
+                clearInterval(timer);
+                //check for deletions
+                if (gameOver(fBlock.points, cBlock.points)) {
+                }
+                else {
+                    cBlock.points = cBlock.points.concat(fBlock.points);
+                    fBlock = new FBlock();
+                    setTimer();
+                }
+            }
+            else {
+                fBlock.points = translateArray(fBlock.points, 0, -1);
+                fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);
+            }
+            updateMatrix(matrix, fBlock.points, cBlock.points);
+            renderMatrix(matrix);
+        }, 1 * 1000);
+    }
+    setTimer();
 }
 main();
