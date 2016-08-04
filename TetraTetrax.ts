@@ -9,7 +9,7 @@ const N = 25;
 const MID = Math.floor(25/2);
 
 type Coord = [number, number];
-type dir = "NORTH"|"SOUTH"|"EAST"|"WEST";
+type Dir = "NORTH"|"SOUTH"|"EAST"|"WEST";
 type BMatrix = Array<Array<boolean>>;
 enum Shape {
     I, O, T, J, L, S, Z
@@ -230,6 +230,25 @@ function shellFilled(d: number, c: Coord[]){
 	return true;
 }
 
+function isTouchingWall(b: Coord[], d: Dir){
+	let xs = b.map(i => i[0]);
+	let ys = b.map(i => i[1]);
+	switch(d){
+		case "NORTH":
+			return 	ys.includes(N-1);
+		case "EAST":
+			return xs.includes(N-1);
+		case "WEST":
+			return xs.includes(0);
+		case "SOUTH":
+			return ys.includes(0);
+	}
+}
+
+function isIntesecting(){
+
+}
+
 function hasCollided(upperBlock: Array<Coord>, lowerBlock: Array<Coord>){
 	for (let uCoord of upperBlock) {
 		for (let lCoord of lowerBlock){
@@ -242,7 +261,7 @@ function hasCollided(upperBlock: Array<Coord>, lowerBlock: Array<Coord>){
 }
 
 function gameOver(f: Coord[], c: Coord[]){
-	return hasCollided(f, getFloor()) || hasCollided(getCeiling(), c);
+	return hasCollided(f, getFloor()) || hasCollided(getCeiling(), c); //Maybe make a touching wall instead?
 }
 
 function main(){
@@ -272,7 +291,7 @@ function main(){
 		
 		if(!blocked)
 		{
-			switch(key){
+			switch(key){ //TODO: Check for intersections
 				case keyQ:
 					fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
 					break;
