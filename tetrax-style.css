@@ -14,4 +14,9 @@
   width: 800px;
   height: 800px; }
 
+.score-text {
+  color: #1a75ff;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 500%; }
+
 /*# sourceMappingURL=tetrax-style.css.map */

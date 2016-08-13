@@ -233,7 +233,7 @@ function shellFilled(d: number, c: Coord[]){
 function isIntersecting(a: Coord[], b: Coord[]){
 	for(let aCoord of a){
 		for(let bCoord of b){
-			if(aCoord == bCoord){
+			if(aCoord[0] == bCoord[0] && aCoord[1] == bCoord[1]){
 				return true;
 			}
 		}
@@ -241,7 +241,7 @@ function isIntersecting(a: Coord[], b: Coord[]){
 	return false;
 }
 
-function hasCollided(upperBlock: Array<Coord>, lowerBlock: Array<Coord>){
+function hasCollided(upperBlock: Array<Coord>, lowerBlock: Array<Coord>){ //if Upperblock has a point that is directly about a point in lowerblock
 	for (let uCoord of upperBlock) {
 		for (let lCoord of lowerBlock){
 			let [ux, uy] = uCoord;
@@ -256,6 +256,10 @@ function gameOver(f: Coord[], c: Coord[]){
 	return hasCollided(f, getFloor()) || hasCollided(getCeiling(), c); //Maybe make a touching wall instead?
 }
 
+function displayEndScreen(sc: number){ 
+	$("#game-div").html("Game Over!");
+}
+
 function main(){
 	let matrix: BMatrix;
 
@@ -268,84 +272,101 @@ function main(){
 	updateMatrix(matrix, fBlock.points, cBlock.points);
 	renderMatrix(matrix);
 	
-	let blocked = false;
+	let gameRunning = true; //Is this needed?
+	
+	let score = 0;
 
+	const keyUpAr = 38;
+	const keyRightAr = 39;
+	const keyDownAr = 40;
+	const keyLeftAr = 37;
+	const keyQ = 81;
+	const keyW = 87;
+	const keyE = 69;
+	const keyR = 82;
+	
 	window.addEventListener('keyup', function(e) {
 		let key: number = e.keyCode ? e.keyCode : e.which;
-		let keyUpAr = 38;
-		let keyRightAr = 39;
-		let keyDownAr = 40;
-		let keyLeftAr = 37;
-		let keyQ = 81;
-		let keyW = 87;
-		let keyE = 69;
-		let keyR = 82;
-		
-		if(!blocked)
+		if(gameRunning)
 		{
-			switch(key){ //TODO: Check for intersections
+			switch(key){ 
 				case keyQ:
-					fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
+					let fCounterClockwise = rotateCounterClockwise(fBlock.points, fBlock.pivot);
+					if(!isIntersecting(fCounterClockwise, cBlock.points)){
+						fBlock.points = fCounterClockwise;
+					}
 					break;
 				case keyW: 
-					fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot); 
+					let fClockwise = rotateClockwise(fBlock.points, fBlock.pivot); 
+					if(!isIntersecting(fClockwise, cBlock.points)){
+						fBlock.points = fClockwise;
+					}
 					break;
 				case keyE:
-					cBlock.points = rotateCounterClockwise(cBlock.points, cBlock.pivot);
+					let cCounterClockwise = rotateCounterClockwise(cBlock.points, cBlock.pivot);
+					if(!isIntersecting(cCounterClockwise, fBlock.points)){
+						cBlock.points = cCounterClockwise;
+					}
 					break;
 				case keyR:
-					cBlock.points = rotateClockwise(cBlock.points, cBlock.pivot);
+					let cClocwise = rotateClockwise(cBlock.points, cBlock.pivot);
+					if(!isIntersecting(cClocwise, fBlock.points)){
+						cBlock.points = cClocwise;
+					}
 					break;
 				case keyRightAr:
-					fBlock.points = translateArray(fBlock.points, 1, 0);
-					fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
+					let fTranslateR = translateArray(fBlock.points, 1, 0);
+					if(!isIntersecting(fTranslateR, cBlock.points)){
+						fBlock.points = fTranslateR;
+						fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
+					}
 					break;
 				case keyLeftAr:
-					fBlock.points = translateArray(fBlock.points, -1, 0);
-					fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
+					let fTranslateL = translateArray(fBlock.points, -1, 0);
+					if(!isIntersecting(fTranslateL, cBlock.points)){
+						fBlock.points = fTranslateL;
+						fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
+					}
 					break;
-				case keyDownAr:
+				case keyDownAr: //todo make check the floor
+					let fTranslateD =  translateArray(fBlock.points, 0, -1);
 					//e.preventDefault();
-					fBlock.points = translateArray(fBlock.points, 0, -1);
-					fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);   
+					if(!isIntersecting(fTranslateD, cBlock.points)){
+						fBlock.points = fTranslateD;
+						fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);   
+					}
 					break;
 			}
-			if(hasCollided(fBlock.points, cBlock.points)){
-				cBlock.points = cBlock.points.concat(fBlock.points)
-				fBlock = new FBlock();
-			}
-
 			updateMatrix(matrix, fBlock.points, cBlock.points);
 			renderMatrix(matrix);
 		}
 	});
-
-	function setTimer(){ //Side-Effects
+	
+	function startIter(){ //Side-Effects
 		let timer = setInterval(function(){
-			blocked = true;
-			if(hasCollided(fBlock.points, cBlock.points)){ //has collided with floor or center
+			if(gameOver(fBlock.points, cBlock.points)){
+				gameRunning = false;
 				clearInterval(timer);
-				//check for deletions
-				if(gameOver(fBlock.points, cBlock.points)){
-					
-				}
-				else {
-					cBlock.points = cBlock.points.concat(fBlock.points)
-					fBlock = new FBlock();
-					setTimer();
-				}
+				displayEndScreen(score);
 			}
 			else {
-				fBlock.points = translateArray(fBlock.points, 0, -1);
-				fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);   
+				if(hasCollided(fBlock.points, cBlock.points)){ //Attach to center
+					cBlock.points = cBlock.points.concat(fBlock.points)
+					fBlock = new FBlock();
+					score += 1;
+					$("#score").text(score);
+				}
+				else {
+					fBlock.points = translateArray(fBlock.points, 0, -1);
+					fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);   
+				}
+				updateMatrix(matrix, fBlock.points, cBlock.points);
+				renderMatrix(matrix);
 			}
-			updateMatrix(matrix, fBlock.points, cBlock.points);
-			renderMatrix(matrix);
-			blocked = false;
 		}, .5 * 1000);
 	}
 
-	setTimer();
+	startIter();
 }
 
 main();

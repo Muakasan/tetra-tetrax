@@ -202,6 +202,18 @@ function shellFilled(d, c) {
     }
     return true;
 }
+function isIntersecting(a, b) {
+    for (var _i = 0, a_1 = a; _i < a_1.length; _i++) {
+        var aCoord = a_1[_i];
+        for (var _a = 0, b_1 = b; _a < b_1.length; _a++) {
+            var bCoord = b_1[_a];
+            if (aCoord[0] == bCoord[0] && aCoord[1] == bCoord[1]) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 function hasCollided(upperBlock, lowerBlock) {
     for (var _i = 0, upperBlock_1 = upperBlock; _i < upperBlock_1.length; _i++) {
         var uCoord = upperBlock_1[_i];
@@ -216,7 +228,10 @@ function hasCollided(upperBlock, lowerBlock) {
     return false;
 }
 function gameOver(f, c) {
-    return hasCollided(f, getFloor()) || hasCollided(getCeiling(), c);
+    return hasCollided(f, getFloor()) || hasCollided(getCeiling(), c); //Maybe make a touching wall instead?
+}
+function displayEndScreen(sc) {
+    $("#game-div").html("Game Over!");
 }
 function main() {
     var matrix;
@@ -225,76 +240,94 @@ function main() {
     matrix = emptyMatrix(N);
     updateMatrix(matrix, fBlock.points, cBlock.points);
     renderMatrix(matrix);
-    var blocked = false;
+    var gameRunning = true; //Is this needed?
+    var score = 0;
+    var keyUpAr = 38;
+    var keyRightAr = 39;
+    var keyDownAr = 40;
+    var keyLeftAr = 37;
+    var keyQ = 81;
+    var keyW = 87;
+    var keyE = 69;
+    var keyR = 82;
     window.addEventListener('keyup', function (e) {
         var key = e.keyCode ? e.keyCode : e.which;
-        var keyUpAr = 38;
-        var keyRightAr = 39;
-        var keyDownAr = 40;
-        var keyLeftAr = 37;
-        var keyQ = 81;
-        var keyW = 87;
-        var keyE = 69;
-        var keyR = 82;
-        if (!blocked) {
+        if (gameRunning) {
             switch (key) {
                 case keyQ:
-                    fBlock.points = rotateCounterClockwise(fBlock.points, fBlock.pivot);
+                    var fCounterClockwise = rotateCounterClockwise(fBlock.points, fBlock.pivot);
+                    if (!isIntersecting(fCounterClockwise, cBlock.points)) {
+                        fBlock.points = fCounterClockwise;
+                    }
                     break;
                 case keyW:
-                    fBlock.points = rotateClockwise(fBlock.points, fBlock.pivot);
+                    var fClockwise = rotateClockwise(fBlock.points, fBlock.pivot);
+                    if (!isIntersecting(fClockwise, cBlock.points)) {
+                        fBlock.points = fClockwise;
+                    }
                     break;
                 case keyE:
-                    cBlock.points = rotateCounterClockwise(cBlock.points, cBlock.pivot);
+                    var cCounterClockwise = rotateCounterClockwise(cBlock.points, cBlock.pivot);
+                    if (!isIntersecting(cCounterClockwise, fBlock.points)) {
+                        cBlock.points = cCounterClockwise;
+                    }
                     break;
                 case keyR:
-                    cBlock.points = rotateClockwise(cBlock.points, cBlock.pivot);
+                    var cClocwise = rotateClockwise(cBlock.points, cBlock.pivot);
+                    if (!isIntersecting(cClocwise, fBlock.points)) {
+                        cBlock.points = cClocwise;
+                    }
                     break;
                 case keyRightAr:
-                    fBlock.points = translateArray(fBlock.points, 1, 0);
-                    fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
+                    var fTranslateR = translateArray(fBlock.points, 1, 0);
+                    if (!isIntersecting(fTranslateR, cBlock.points)) {
+                        fBlock.points = fTranslateR;
+                        fBlock.pivot = translatePoint(fBlock.pivot, 1, 0);
+                    }
                     break;
                 case keyLeftAr:
-                    fBlock.points = translateArray(fBlock.points, -1, 0);
-                    fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
+                    var fTranslateL = translateArray(fBlock.points, -1, 0);
+                    if (!isIntersecting(fTranslateL, cBlock.points)) {
+                        fBlock.points = fTranslateL;
+                        fBlock.pivot = translatePoint(fBlock.pivot, -1, 0);
+                    }
                     break;
                 case keyDownAr:
+                    var fTranslateD = translateArray(fBlock.points, 0, -1);
                     //e.preventDefault();
-                    fBlock.points = translateArray(fBlock.points, 0, -1);
-                    fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);
+                    if (!isIntersecting(fTranslateD, cBlock.points)) {
+                        fBlock.points = fTranslateD;
+                        fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);
+                    }
                     break;
-            }
-            if (hasCollided(fBlock.points, cBlock.points)) {
-                cBlock.points = cBlock.points.concat(fBlock.points);
-                fBlock = new FBlock();
             }
             updateMatrix(matrix, fBlock.points, cBlock.points);
             renderMatrix(matrix);
         }
     });
-    function setTimer() {
+    function startIter() {
         var timer = setInterval(function () {
-            blocked = true;
-            if (hasCollided(fBlock.points, cBlock.points)) {
+            if (gameOver(fBlock.points, cBlock.points)) {
+                gameRunning = false;
                 clearInterval(timer);
-                //check for deletions
-                if (gameOver(fBlock.points, cBlock.points)) {
-                }
-                else {
-                    cBlock.points = cBlock.points.concat(fBlock.points);
-                    fBlock = new FBlock();
-                    setTimer();
-                }
+                displayEndScreen(score);
             }
             else {
-                fBlock.points = translateArray(fBlock.points, 0, -1);
-                fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);
+                if (hasCollided(fBlock.points, cBlock.points)) {
+                    cBlock.points = cBlock.points.concat(fBlock.points);
+                    fBlock = new FBlock();
+                    score += 1;
+                    $("#score").text(score);
+                }
+                else {
+                    fBlock.points = translateArray(fBlock.points, 0, -1);
+                    fBlock.pivot = translatePoint(fBlock.pivot, 0, -1);
+                }
+                updateMatrix(matrix, fBlock.points, cBlock.points);
+                renderMatrix(matrix);
             }
-            updateMatrix(matrix, fBlock.points, cBlock.points);
-            renderMatrix(matrix);
-            blocked = false;
         }, .5 * 1000);
     }
-    setTimer();
+    startIter();
 }
 main();
